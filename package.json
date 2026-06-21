@@ -1,0 +1,42 @@
+{
+  "name": "portboard",
+  "version": "1.0.0",
+  "description": "A phone-friendly dashboard of your live local dev servers, labeled by git worktree. Stop asking which port.",
+  "bin": {
+    "portboard": "bin/portboard.js"
+  },
+  "type": "commonjs",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "start": "node bin/portboard.js"
+  },
+  "keywords": [
+    "dev",
+    "ports",
+    "worktree",
+    "git",
+    "dashboard",
+    "localhost",
+    "mobile",
+    "vite",
+    "next"
+  ],
+  "author": "Leslie Tou",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeslieTou/portboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LeslieTou/portboard/issues"
+  },
+  "homepage": "https://github.com/LeslieTou/portboard#readme",
+  "os": [
+    "darwin"
+  ]
+}
