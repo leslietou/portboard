@@ -16,7 +16,7 @@ If you run a bunch of git worktrees, each with its own dev server, the port keep
 npx portboard
 ```
 
-That's the whole thing. It prints a URL like `http://192.168.1.42:7878`. Open that on your phone (same WiFi), then **Share → Add to Home Screen** for an app icon.
+That's the whole thing. It prints two URLs: a stable `http://your-mac.local:7878` (recommended, it keeps working even when your IP changes) and the raw `http://192.168.1.42:7878`. Open either on your phone (same WiFi), then **Share → Add to Home Screen** for an app icon.
 
 No global install. You can also run it straight from this repo, without npm:
 
@@ -42,11 +42,12 @@ npx portboard uninstall
 
 - **Worktree + branch labels**, not bare port numbers
 - **Newest first**, so a freshly started server is always on top
-- **Reachability dot** — green means your phone can open it; amber means it's bound to `localhost` only (restart that server with `--host` or `0.0.0.0`)
+- **Reachability dot**: green means your phone can open it; amber means it's bound to `localhost` only (restart that server with `--host` or `0.0.0.0`)
 - **Uptime** per server, so you know if a restart actually took
-- **Copy URL** and **rename** any server — names stick to the worktree, so they survive the port changing
+- **Copy URL** and **rename** any server. Names stick to the worktree, so they survive the port changing
 - **Chrome toggle** to open cards in Chrome instead of Safari on iOS
 - **Add to Home Screen** for a standalone app with its own icon
+- **Survives IP changes**: bookmark the `.local` URL and the card links rebuild from whatever host you opened the page on, so a new DHCP lease never breaks the bookmark
 
 ## Custom port
 
@@ -56,7 +57,7 @@ npx portboard 7900
 
 ## Requirements
 
-macOS, Node 14+, and git. It uses `lsof`, `ps`, and `git`, which are already on your Mac. It is **read-only** — it never stops, restarts, or changes your servers.
+macOS, Node 14+, and git. It uses `lsof`, `ps`, and `git`, which are already on your Mac. It is **read-only**: it never stops, restarts, or changes your servers.
 
 ## How it works
 

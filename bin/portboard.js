@@ -41,6 +41,7 @@ const LABEL = 'com.portboard.dashboard';
 const PLIST = path.join(HOME, 'Library', 'LaunchAgents', LABEL + '.plist');
 
 let LAN_IP = '127.0.0.1';
+let LOCAL_HOST = null;
 let DASHBOARD_PORT = 7878;
 
 // ---- helpers ------------------------------------------------------------
@@ -79,6 +80,16 @@ function getLanIp() {
       finish(fallbackIp());
     }
   });
+}
+
+function localHostname() {
+  // Bonjour/mDNS name (e.g. macbook.local) that resolves on the LAN no
+  // matter what the IP is, so a bookmark survives DHCP changes.
+  let n = run('scutil', ['--get', 'LocalHostName']).trim();
+  if (n) return n.toLowerCase() + '.local';
+  n = (os.hostname() || '').trim();
+  if (!n || n === 'localhost') return null;
+  return n.indexOf('.') !== -1 ? n.toLowerCase() : n.toLowerCase() + '.local';
 }
 
 // ---- custom names -------------------------------------------------------
@@ -365,12 +376,13 @@ function render(servers) {
       '<div class="body"><div class="label">' + esc(s.label) + '</div>' +
       '<div class="sub">' + meta + '</div></div>' +
       '<div class="port">:' + s.port + '</div>';
-    var href = CHROME ? 'googlechrome' + s.url.slice(4) : s.url;
+    var base = 'http://' + location.hostname + ':' + s.port;
+    var href = CHROME ? 'googlechrome' + base.slice(4) : base;
     var open = s.reachable
       ? '<a class="open" href="' + href + '">' + inner + '</a>'
       : '<div class="open">' + inner + '</div>';
     var edit = '<button class="edit" data-key="' + esc(s.key) + '" data-name="' + esc(s.label) + '" aria-label="Rename">' + ICON_EDIT + '</button>';
-    var copy = '<button class="copy" data-url="' + s.url + '" aria-label="Copy ' + s.url + '">' + ICON_COPY + '</button>';
+    var copy = '<button class="copy" data-url="' + base + '" aria-label="Copy ' + base + '">' + ICON_COPY + '</button>';
     return '<div class="card' + (s.reachable ? '' : ' dead') + '">' + open + edit + copy + '</div>';
   }).join('');
 }
@@ -456,7 +468,7 @@ function startServer(port) {
       return;
     }
     if (url.indexOf('/api') === 0) {
-      const payload = JSON.stringify({ servers: collect(), host: 'portboard · http://' + LAN_IP + ':' + port });
+      const payload = JSON.stringify({ servers: collect(), host: 'portboard · http://' + (LOCAL_HOST || LAN_IP) + ':' + port });
       send(res, 200, 'application/json', payload, { 'Cache-Control': 'no-store' });
     } else if (url.indexOf('/icon') === 0) {
       send(res, 200, 'image/png', Buffer.from(ICON_B64, 'base64'), { 'Cache-Control': 'max-age=86400' });
@@ -472,9 +484,10 @@ function startServer(port) {
     process.exit(1);
   });
   server.listen(port, '0.0.0.0', () => {
-    const url = 'http://' + LAN_IP + ':' + port;
     console.log('\n  portboard is live');
-    console.log('  open on your phone (same WiFi):  ' + url);
+    console.log('  open on your phone (same WiFi):');
+    if (LOCAL_HOST) console.log('     http://' + LOCAL_HOST + ':' + port + '   (stable, survives IP changes)');
+    console.log('     http://' + LAN_IP + ':' + port + (LOCAL_HOST ? '       (or use the IP)' : ''));
     console.log('  Add to Home Screen for an app icon · Ctrl-C to stop\n');
   });
 }
@@ -516,7 +529,9 @@ function install(port) {
     try { execFileSync('launchctl', ['bootstrap', 'gui/' + process.getuid(), PLIST], { stdio: 'ignore' }); } catch (e2) {}
   }
   console.log('\n  portboard installed. it will start automatically at every login.');
-  console.log('  open on your phone (same WiFi):  http://' + LAN_IP + ':' + port);
+  console.log('  open on your phone (same WiFi):');
+  if (LOCAL_HOST) console.log('     http://' + LOCAL_HOST + ':' + port + '   (stable, survives IP changes)');
+  console.log('     http://' + LAN_IP + ':' + port);
   console.log('  remove it later with:  npx portboard uninstall\n');
 }
 
@@ -547,6 +562,7 @@ function help() {
 
 async function main() {
   LAN_IP = await getLanIp();
+  LOCAL_HOST = localHostname();
   const arg = process.argv[2];
   if (arg === 'install') return install(parseInt(process.argv[3], 10) || 7878);
   if (arg === 'uninstall' || arg === 'remove') return uninstall();
