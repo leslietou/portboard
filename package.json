@@ -1,9 +1,10 @@
 {
-  "name": "portboard",
+  "name": "portboard-cli",
   "version": "1.0.0",
   "description": "A phone-friendly dashboard of your live local dev servers, labeled by git worktree. Stop asking which port.",
   "bin": {
-    "portboard": "bin/portboard.js"
+    "portboard": "bin/portboard.js",
+    "portboard-cli": "bin/portboard.js"
   },
   "type": "commonjs",
   "engines": {

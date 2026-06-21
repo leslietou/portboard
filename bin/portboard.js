@@ -5,9 +5,9 @@
  * portboard - a phone-friendly dashboard of your live local dev servers,
  * labeled by git worktree/branch, tappable from your phone on the same WiFi.
  *
- *   npx portboard            run the dashboard (default port 7878)
- *   npx portboard install    start automatically at login (background)
- *   npx portboard uninstall  remove the login item
+ *   npx portboard-cli            run the dashboard (default port 7878)
+ *   npx portboard-cli install    start automatically at login (background)
+ *   npx portboard-cli uninstall  remove the login item
  *
  * No dependencies. macOS-native (uses lsof + ps + git, already on your machine).
  */
@@ -480,7 +480,7 @@ function startServer(port) {
   });
   server.on('error', (e) => {
     console.log('  could not start on port ' + port + ': ' + e.message);
-    console.log('  try a different port:  npx portboard ' + (port + 1) + '\n');
+    console.log('  try a different port:  npx portboard-cli ' + (port + 1) + '\n');
     process.exit(1);
   });
   server.listen(port, '0.0.0.0', () => {
@@ -532,7 +532,7 @@ function install(port) {
   console.log('  open on your phone (same WiFi):');
   if (LOCAL_HOST) console.log('     http://' + LOCAL_HOST + ':' + port + '   (stable, survives IP changes)');
   console.log('     http://' + LAN_IP + ':' + port);
-  console.log('  remove it later with:  npx portboard uninstall\n');
+  console.log('  remove it later with:  npx portboard-cli uninstall\n');
 }
 
 function uninstall() {
@@ -549,9 +549,9 @@ function help() {
     'portboard - live dashboard of your local dev servers, on your phone',
     '',
     'usage:',
-    '  npx portboard [port]        run the dashboard (default port 7878)',
-    '  npx portboard install       start automatically at login (background)',
-    '  npx portboard uninstall     remove the login item',
+    '  npx portboard-cli [port]      run the dashboard (default port 7878)',
+    '  npx portboard-cli install     start automatically at login (background)',
+    '  npx portboard-cli uninstall   remove the login item',
     '',
     'then open the printed http://<your-mac>:<port> on your phone (same WiFi).',
     '',

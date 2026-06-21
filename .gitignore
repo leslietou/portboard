@@ -3,3 +3,8 @@ node_modules/
 .DS_Store
 .portboard/
 npm-debug.log*
+
+# local working memory (kept out of the published repo)
+CLAUDE.md
+diary/
+context/

@@ -13,7 +13,7 @@ If you run a bunch of git worktrees, each with its own dev server, the port keep
 ## Run it
 
 ```sh
-npx portboard
+npx portboard-cli
 ```
 
 That's the whole thing. It prints two URLs: a stable `http://your-mac.local:7878` (recommended, it keeps working even when your IP changes) and the raw `http://192.168.1.42:7878`. Open either on your phone (same WiFi), then **Share → Add to Home Screen** for an app icon.
@@ -29,13 +29,13 @@ npx github:LeslieTou/portboard
 Make it start automatically at every login (runs in the background, restarts itself if it dies):
 
 ```sh
-npx portboard install
+npx portboard-cli install
 ```
 
 Remove it:
 
 ```sh
-npx portboard uninstall
+npx portboard-cli uninstall
 ```
 
 ## What you get
@@ -52,7 +52,7 @@ npx portboard uninstall
 ## Custom port
 
 ```sh
-npx portboard 7900
+npx portboard-cli 7900
 ```
 
 ## Requirements
