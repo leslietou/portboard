@@ -288,6 +288,7 @@ const PAGE = `<!doctype html>
 <link rel="manifest" href="/manifest.webmanifest">
 <style>
   :root { color-scheme: dark; }
+  html { background: #0c0d10; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0; padding: max(20px, env(safe-area-inset-top)) 16px 48px;
@@ -332,6 +333,10 @@ const PAGE = `<!doctype html>
           color: #cfd6e4; flex: none; }
   .warn { display: inline-block; margin-left: 6px; font-size: 11px; color: #e0a44a; }
   .empty { text-align: center; color: #5b6472; padding: 56px 20px; font-size: 14px; }
+  .sk-bar { background: #20242c; border-radius: 6px; }
+  .sk-dot { background: #2a2f39; box-shadow: none; }
+  .skeleton { animation: skpulse 1.4s ease-in-out infinite; }
+  @keyframes skpulse { 0%, 100% { opacity: .5; } 50% { opacity: .95; } }
   footer { margin-top: 22px; text-align: center; font-size: 11px; color: #444b57; }
 </style>
 </head>
@@ -343,7 +348,11 @@ const PAGE = `<!doctype html>
       <div class="meta" id="meta">scanning…</div>
     </div>
   </header>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="grid">
+    <div class="card skeleton"><div class="open"><span class="dot sk-dot"></span><div class="body"><div class="sk-bar" style="width:46%;height:13px"></div><div class="sk-bar" style="width:64%;height:10px;margin-top:8px"></div></div><div class="sk-bar" style="width:44px;height:18px"></div></div></div>
+    <div class="card skeleton" style="animation-delay:.15s"><div class="open"><span class="dot sk-dot"></span><div class="body"><div class="sk-bar" style="width:38%;height:13px"></div><div class="sk-bar" style="width:54%;height:10px;margin-top:8px"></div></div><div class="sk-bar" style="width:44px;height:18px"></div></div></div>
+    <div class="card skeleton" style="animation-delay:.3s"><div class="open"><span class="dot sk-dot"></span><div class="body"><div class="sk-bar" style="width:52%;height:13px"></div><div class="sk-bar" style="width:40%;height:10px;margin-top:8px"></div></div><div class="sk-bar" style="width:44px;height:18px"></div></div></div>
+  </div>
   <footer id="foot"></footer>
 <script>
 var ICON_COPY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
