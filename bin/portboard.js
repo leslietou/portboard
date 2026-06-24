@@ -17,6 +17,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const dgram = require('dgram');
+const tls = require('tls');
 const { execFileSync } = require('child_process');
 
 // launchd hands background processes a bare PATH, so make sure git/lsof/ps
@@ -112,6 +113,39 @@ function setName(key, name) {
   saveNames(n);
 }
 
+// ---- https detection ----------------------------------------------------
+
+const SCHEMES_PATH = path.join(APP_DIR, 'schemes.json');
+
+function loadSchemes() {
+  // optional manual overrides, hand-editable: { "<worktree path>": "https" | "http" }
+  try { return JSON.parse(fs.readFileSync(SCHEMES_PATH, 'utf8')); }
+  catch (e) { return {}; }
+}
+
+const schemeCache = new Map();  // port -> { pid, secure }
+
+function probeHttps(port) {
+  // Does this local port speak TLS? Try a handshake to 127.0.0.1:port.
+  // Succeeds for an https dev server (self-signed is fine), errors for plain http.
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    let sock;
+    try {
+      sock = tls.connect(
+        { host: '127.0.0.1', port, servername: 'localhost', rejectUnauthorized: false, ALPNProtocols: ['http/1.1'] },
+        () => { try { sock.destroy(); } catch (e) {} finish(true); }
+      );
+      sock.on('error', () => { try { sock.destroy(); } catch (e) {} finish(false); });
+      sock.setTimeout(600, () => { try { sock.destroy(); } catch (e) {} finish(false); });
+    } catch (e) {
+      finish(false);
+    }
+  });
+}
+
+
 // ---- scanning -----------------------------------------------------------
 
 const ADDR_RE = /^(.*):(\d+)$/;
@@ -199,7 +233,7 @@ function procAges(pids) {
   return res;
 }
 
-function collect() {
+async function collect() {
   const rows = scanListening();
 
   // Dedup by port (a server often listens on both IPv4 and IPv6).
@@ -238,10 +272,24 @@ function collect() {
       reachable: r.reachable,
       url: 'http://' + LAN_IP + ':' + port,
       is_git: isGit,
+      secure: false,
+      _pid: r.pid,
       age: ageSecs !== null ? ago(ageSecs) : null,
       age_secs: ageSecs,
     });
   }
+
+  // resolve http vs https per server: manual override, else cached, else probe
+  const overrides = loadSchemes();
+  await Promise.all(servers.map(async (s) => {
+    if (s.key in overrides) { s.secure = overrides[s.key] === 'https'; return; }
+    const c = schemeCache.get(s.port);
+    if (c && c.pid === s._pid) { s.secure = c.secure; return; }
+    const secure = await probeHttps(s.port);
+    schemeCache.set(s.port, { pid: s._pid, secure });
+    s.secure = secure;
+  }));
+  servers.forEach((s) => { delete s._pid; });
 
   // most recently started first; unknown start time sinks to the bottom
   servers.sort((a, b) => {
@@ -329,6 +377,7 @@ const PAGE = `<!doctype html>
   .sub { font-size: 12.5px; color: #7b8494; margin-top: 2px;
          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .branch { color: #9aa6f0; }
+  .lock { color: #3ecf8e; }
   .port { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
           color: #cfd6e4; flex: none; }
   .warn { display: inline-block; margin-left: 6px; font-size: 11px; color: #e0a44a; }
@@ -378,6 +427,7 @@ function render(servers) {
   grid.innerHTML = servers.map(function(s) {
     var meta = s.branch ? '<span class="branch">' + esc(s.branch) + '</span>' : esc(s.command);
     if (s.age) meta += ' · ' + esc(s.age);
+    if (s.secure) meta += ' · <span class="lock">https</span>';
     if (!s.reachable) meta += '<span class="warn">localhost only · bind 0.0.0.0 for phone</span>';
     var dot = s.reachable ? 'live' : 'local';
     var inner =
@@ -385,7 +435,7 @@ function render(servers) {
       '<div class="body"><div class="label">' + esc(s.label) + '</div>' +
       '<div class="sub">' + meta + '</div></div>' +
       '<div class="port">:' + s.port + '</div>';
-    var base = 'http://' + location.hostname + ':' + s.port;
+    var base = (s.secure ? 'https' : 'http') + '://' + location.hostname + ':' + s.port;
     var href = CHROME ? 'googlechrome' + base.slice(4) : base;
     var open = s.reachable
       ? '<a class="open" href="' + href + '">' + inner + '</a>'
@@ -477,8 +527,10 @@ function startServer(port) {
       return;
     }
     if (url.indexOf('/api') === 0) {
-      const payload = JSON.stringify({ servers: collect(), host: 'portboard · http://' + (LOCAL_HOST || LAN_IP) + ':' + port });
-      send(res, 200, 'application/json', payload, { 'Cache-Control': 'no-store' });
+      collect().then((servers) => {
+        const payload = JSON.stringify({ servers, host: 'portboard · http://' + (LOCAL_HOST || LAN_IP) + ':' + port });
+        send(res, 200, 'application/json', payload, { 'Cache-Control': 'no-store' });
+      }).catch((e) => send(res, 500, 'application/json', JSON.stringify({ error: String(e) })));
     } else if (url.indexOf('/icon') === 0) {
       send(res, 200, 'image/png', Buffer.from(ICON_B64, 'base64'), { 'Cache-Control': 'max-age=86400' });
     } else if (url.indexOf('/manifest') === 0) {

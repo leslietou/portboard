@@ -48,6 +48,7 @@ npx portboard-cli uninstall
 - **Chrome toggle** to open cards in Chrome instead of Safari on iOS
 - **Add to Home Screen** for a standalone app with its own icon
 - **Survives IP changes**: bookmark the `.local` URL and the card links rebuild from whatever host you opened the page on, so a new DHCP lease never breaks the bookmark
+- **HTTPS aware**: if a server speaks TLS (local https for OTP, passkeys, secure cookies), portboard detects it and links `https://` automatically. Install your cert on the phone and it just works
 
 ## Custom port
 
@@ -61,7 +62,7 @@ macOS, Node 14+, and git. It uses `lsof`, `ps`, and `git`, which are already on 
 
 ## How it works
 
-A tiny local HTTP server scans listening TCP ports with `lsof`, maps each one back to the folder and git worktree it's running from, and serves a mobile-friendly page bound to your LAN. One file, no dependencies. Custom names live in `~/.portboard/names.json` (hand-editable).
+A tiny local HTTP server scans listening TCP ports with `lsof`, maps each one back to the folder and git worktree it's running from, and serves a mobile-friendly page bound to your LAN. It also does a quick TLS handshake against each port to tell http from https, so secure dev servers link correctly. One file, no dependencies. Custom names live in `~/.portboard/names.json`, and you can force a port's scheme in `~/.portboard/schemes.json` (both hand-editable).
 
 ## License
 
