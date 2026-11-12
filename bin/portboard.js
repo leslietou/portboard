@@ -5,9 +5,9 @@
  * portboard - a phone-friendly dashboard of your live local dev servers,
  * labeled by git worktree/branch, tappable from your phone on the same WiFi.
  *
- *   npx portboard-cli            run the dashboard (default port 7878)
- *   npx portboard-cli install    start automatically at login (background)
- *   npx portboard-cli uninstall  remove the login item
+ *   npx github:LeslieTou/portboard            run the dashboard (default port 7878)
+ *   npx github:LeslieTou/portboard install    start automatically at login (background)
+ *   npx github:LeslieTou/portboard uninstall  remove the login item
  *
  * No dependencies. macOS-native (uses lsof + ps + git, already on your machine).
  */
@@ -504,6 +504,29 @@ setInterval(tick, 3000);
 
 // ---- web ----------------------------------------------------------------
 
+// PORTBOARD_DEMO=1 serves made-up servers instead of scanning, so screenshots
+// never show real project names.
+const DEMO = process.env.PORTBOARD_DEMO === '1';
+const DEMO_HOST = 'my-mac.local';
+
+function demoServer(port, label, branch, ageSecs, extra) {
+  return Object.assign({
+    port, label, custom: false, key: '/demo/' + label, branch, command: 'node',
+    reachable: true, url: 'http://' + DEMO_HOST + ':' + port, is_git: true,
+    secure: false, age: ago(ageSecs), age_secs: ageSecs,
+  }, extra || {});
+}
+
+const DEMO_SERVERS = [
+  demoServer(5173, 'checkout-v2', 'feat/checkout', 120),
+  demoServer(3000, 'Marketing site', 'main', 1080, { custom: true, secure: true }),
+  demoServer(6006, 'storybook', 'design-system', 2820),
+  demoServer(8080, 'api', 'fix/rate-limit', 7200),
+  demoServer(5174, 'onboarding', 'feat/onboarding', 10800),
+  demoServer(3001, 'admin', 'chore/deps', 14400),
+  demoServer(4321, 'docs', 'docs', 18000, { reachable: false }),
+];
+
 function send(res, code, ctype, body, extra) {
   res.writeHead(code, Object.assign({ 'Content-Type': ctype }, extra || {}));
   res.end(body);
@@ -527,8 +550,9 @@ function startServer(port) {
       return;
     }
     if (url.indexOf('/api') === 0) {
-      collect().then((servers) => {
-        const payload = JSON.stringify({ servers, host: 'portboard · http://' + (LOCAL_HOST || LAN_IP) + ':' + port });
+      (DEMO ? Promise.resolve(DEMO_SERVERS) : collect()).then((servers) => {
+        const host = DEMO ? DEMO_HOST : (LOCAL_HOST || LAN_IP);
+        const payload = JSON.stringify({ servers, host: 'portboard · http://' + host + ':' + port });
         send(res, 200, 'application/json', payload, { 'Cache-Control': 'no-store' });
       }).catch((e) => send(res, 500, 'application/json', JSON.stringify({ error: String(e) })));
     } else if (url.indexOf('/icon') === 0) {
@@ -541,7 +565,7 @@ function startServer(port) {
   });
   server.on('error', (e) => {
     console.log('  could not start on port ' + port + ': ' + e.message);
-    console.log('  try a different port:  npx portboard-cli ' + (port + 1) + '\n');
+    console.log('  try a different port:  npx github:LeslieTou/portboard ' + (port + 1) + '\n');
     process.exit(1);
   });
   server.listen(port, '0.0.0.0', () => {
@@ -593,7 +617,7 @@ function install(port) {
   console.log('  open on your phone (same WiFi):');
   if (LOCAL_HOST) console.log('     http://' + LOCAL_HOST + ':' + port + '   (stable, survives IP changes)');
   console.log('     http://' + LAN_IP + ':' + port);
-  console.log('  remove it later with:  npx portboard-cli uninstall\n');
+  console.log('  remove it later with:  npx github:LeslieTou/portboard uninstall\n');
 }
 
 function uninstall() {
@@ -610,9 +634,9 @@ function help() {
     'portboard - live dashboard of your local dev servers, on your phone',
     '',
     'usage:',
-    '  npx portboard-cli [port]      run the dashboard (default port 7878)',
-    '  npx portboard-cli install     start automatically at login (background)',
-    '  npx portboard-cli uninstall   remove the login item',
+    '  npx github:LeslieTou/portboard [port]      run the dashboard (default port 7878)',
+    '  npx github:LeslieTou/portboard install     start automatically at login (background)',
+    '  npx github:LeslieTou/portboard uninstall   remove the login item',
     '',
     'then open the printed http://<your-mac>:<port> on your phone (same WiFi).',
     '',

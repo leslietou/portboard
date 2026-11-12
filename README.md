@@ -3,7 +3,7 @@
 See every local dev server on your phone. Labeled by git worktree, sorted by recency, one tap to open.
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="portboard on a phone, showing three dev servers as cards" width="320">
+  <img src="docs/screenshot.png" alt="portboard on an iPhone, listing seven dev servers as cards, each labeled with its worktree, git branch, uptime, and port" width="320">
 </p>
 
 ## Why
@@ -13,29 +13,23 @@ If you run a bunch of git worktrees, each with its own dev server, the port keep
 ## Run it
 
 ```sh
-npx portboard-cli
-```
-
-That's the whole thing. It prints two URLs: a stable `http://your-mac.local:7878` (recommended, it keeps working even when your IP changes) and the raw `http://192.168.1.42:7878`. Open either on your phone (same WiFi), then **Share → Add to Home Screen** for an app icon.
-
-No global install. You can also run it straight from this repo, without npm:
-
-```sh
 npx github:LeslieTou/portboard
 ```
+
+That's the whole thing, no global install. It prints two URLs: a stable `http://your-mac.local:7878` (recommended, it keeps working even when your IP changes) and the raw `http://192.168.1.42:7878`. Open either on your phone (same WiFi), then **Share → Add to Home Screen** for an app icon.
 
 ## Keep it running
 
 Make it start automatically at every login (runs in the background, restarts itself if it dies):
 
 ```sh
-npx portboard-cli install
+npx github:LeslieTou/portboard install
 ```
 
 Remove it:
 
 ```sh
-npx portboard-cli uninstall
+npx github:LeslieTou/portboard uninstall
 ```
 
 ## What you get
@@ -53,7 +47,7 @@ npx portboard-cli uninstall
 ## Custom port
 
 ```sh
-npx portboard-cli 7900
+npx github:LeslieTou/portboard 7900
 ```
 
 ## Requirements
@@ -64,6 +58,10 @@ macOS, Node 14+, and git. It uses `lsof`, `ps`, and `git`, which are already on 
 
 A tiny local HTTP server scans listening TCP ports with `lsof`, maps each one back to the folder and git worktree it's running from, and serves a mobile-friendly page bound to your LAN. It also does a quick TLS handshake against each port to tell http from https, so secure dev servers link correctly. One file, no dependencies. Custom names live in `~/.portboard/names.json`, and you can force a port's scheme in `~/.portboard/schemes.json` (both hand-editable).
 
+## Hacking on it
+
+Everything lives in `bin/portboard.js`. Clone the repo and run `node bin/portboard.js`. To see the page without real servers (for screenshots, say), run `PORTBOARD_DEMO=1 node bin/portboard.js` and it shows a made-up set instead.
+
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).
